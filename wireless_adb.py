@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from multiprocessing import Process,Pipe
 from multiprocessing.connection import Connection
 
+
 load_dotenv()
 
 SCRCPY_PATH=os.getenv("SCRCPY_PATH") or ""
@@ -76,19 +77,20 @@ def list_devices():
     ret=subprocess.run(["adb", "devices"],capture_output=True)
     print(ret.stdout.decode())
 
-def launch_scrcpy(*scrcpy_args) -> Process:
+def launch_scrcpy(*scrcpy_args) :
     parent_con, child_con =Pipe()
     p=Process(target=launch_scrcpy_thread
     ,args=(child_con,)
     )
     p.start()
-    return p
 
 def launch_scrcpy_thread(con:Connection):
     ip=get_adb_android_ip("-e") # TODO add provided arg instead of -e
     try:
         print("ctrl + c to end scrcpy")
-        subprocess.call([SCRCPY_PATH,F"--tcpip={ip}"], stdout=subprocess.PIPE)  
+        subprocess.call([SCRCPY_PATH,F"--tcpip={ip}"], stdout=subprocess.PIPE)
+        print("started scrcpy")
+
     except FileNotFoundError as e:
         print(F"{e.args} {e.errno} {e.filename} {e.filename2} {e.strerror}")
     except OSError as e:
@@ -111,7 +113,11 @@ def main():
                     list_devices()
                 case ["scrcpy", *scrcpy_args]:
                     print(F" scrcpy args are: {scrcpy_args}")
-                    p=launch_scrcpy(scrcpy_args)
+                    launch_scrcpy(scrcpy_args)
+                case ["power" ,*after_power]:
+                    if after_power==[] or after_power ==["button"]:
+                        ret=subprocess.run(["adb","shell","input", "keyevent","26"],check=True)
+                        print("power button pressed")
     except KeyboardInterrupt:
         print("end")
 
