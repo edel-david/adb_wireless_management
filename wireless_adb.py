@@ -1,8 +1,13 @@
 import os
 import subprocess
-import dotenv
-SCRCPY_PATH=os.getenv("SCRCPY_PATH")
-DEVICE_NAME=os.getenv("DEVICE_NAME")
+from dotenv import load_dotenv
+from multiprocessing import Process,Pipe
+from multiprocessing.connection import Connection
+
+load_dotenv()
+
+SCRCPY_PATH=os.getenv("SCRCPY_PATH") or ""
+DEVICE_NAME=os.getenv("DEVICE_NAME") or ""
 
 
 
@@ -10,14 +15,17 @@ class IPNotFoundError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
-def get_adb_android_ip(connection_type_flag:str):
+def get_adb_android_ip(connection_type_flag:str|None =None):
     """
     connection_type_flag is either -d for usb of -e for ip 
     Not yet:
         or -s ip:port to specif port
     """
 
-    ip_args=["adb"]+[connection_type_flag]+["shell","ip","route"]
+    ip_args=["adb"]
+    if connection_type_flag is not None:
+        ip_args+=[connection_type_flag]
+    ip_args+=["shell","ip","route"]
     ret=subprocess.run(ip_args, capture_output=True)   # only uses usb
     
     possible_ip=ret.stdout.decode().strip().split(" ")[-1]
@@ -68,25 +76,42 @@ def list_devices():
     ret=subprocess.run(["adb", "devices"],capture_output=True)
     print(ret.stdout.decode())
 
-def launch_scrcpy():
-    ip=get_adb_android_ip("-e")
-    subprocess.call([SCRCPY_PATH,F"--tcpip={ip}:5555"], stdout=subprocess.PIPE)  
-    # type: ignore
+def launch_scrcpy(*scrcpy_args) -> Process:
+    parent_con, child_con =Pipe()
+    p=Process(target=launch_scrcpy_thread
+    ,args=(child_con,)
+    )
+    p.start()
+    return p
+
+def launch_scrcpy_thread(con:Connection):
+    ip=get_adb_android_ip("-e") # TODO add provided arg instead of -e
+    try:
+        print("ctrl + c to end scrcpy")
+        subprocess.call([SCRCPY_PATH,F"--tcpip={ip}"], stdout=subprocess.PIPE)  
+    except FileNotFoundError as e:
+        print(F"{e.args} {e.errno} {e.filename} {e.filename2} {e.strerror}")
+    except OSError as e:
+        print(F"{e.args} {e.errno} {e.filename} {e.filename2} {e.strerror}")
+    except KeyboardInterrupt:
+        print("ended scrcpy")
 
 def main():
     try:
+        p:Process
         list_devices()
         while True:
             inp=input("wlan | usb | status | scrcpy >>> ")
-            match inp:
-                case "wlan" | "wifi":
+            match inp.split(" "):
+                case ["wlan"] | ["wifi"]:
                     turn_on_wlan()
-                case "usb" | "stop":
+                case[ "usb"] | ["stop"]:
                     stop_tcp_server()
-                case "status" | "devices":
+                case ["status"] | ["devices"]:
                     list_devices()
-                case "scrcpy":
-                    launch_scrcpy()
+                case ["scrcpy", *scrcpy_args]:
+                    print(F" scrcpy args are: {scrcpy_args}")
+                    p=launch_scrcpy(scrcpy_args)
     except KeyboardInterrupt:
         print("end")
 
