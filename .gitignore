@@ -3,3 +3,4 @@ venv
 wireless_adb.spec
 build
 dist
+test
