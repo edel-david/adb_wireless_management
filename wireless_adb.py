@@ -182,8 +182,8 @@ def main():
                 case ["scrcpy", *scrcpy_args]:
                     print(F" scrcpy args are: {scrcpy_args}")
                     launch_scrcpy(*scrcpy_args)
-                case ["power" ,*after_power]:
-                    if after_power==[] or after_power ==["button"]:
+                case ["power" ,*after_power_args]:
+                    if after_power_args==[] or after_power_args ==["button"]:
                         subprocess.run(["adb","shell","input", "keyevent","26"],check=True)
                         print("power button pressed")
                 case ["connect",*ip_poss_port]:  # to connect to adb wireless if you used the android 11+ quick settings developer tile to enable wireless debug. This trash tile uses an random port, wich serves no reason known to mankind. 
