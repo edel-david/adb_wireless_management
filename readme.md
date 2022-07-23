@@ -9,6 +9,7 @@ manage your android devices tcp/adb/debugging server
 Dependencies:
 - adb (the **A**ndroid **D**ebug **B**ridge is part of the android sdk) [Link to ADB](https://developer.android.com/studio/command-line/adb)
 - _python-dotenv_ python package (install with pip install python-dotenv)
+- nmap for port discovery for wireless debugging on random ports.
 - For scrcpy: *.env* File containing:
     ```.env
     SCRCPY_PATH="C:\\Users\\$User\\Downloads\\scrcpy-win64-v1.21\\scrcpy.exe"
