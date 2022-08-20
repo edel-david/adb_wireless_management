@@ -4,7 +4,7 @@ import subprocess
 from dotenv import load_dotenv
 from multiprocessing import Process,Pipe
 from multiprocessing.connection import Connection
-
+from sys import platform
 
 def get_env_or_error(env_var_name:str):
     ret = os.getenv(env_var_name) or EnvNotFoundRaiser(env_var_name)
@@ -16,6 +16,7 @@ class EnvNotFoundRaiser():
     def __init__(self,env_var_name):
         raise KeyError(F"{env_var_name} was not found in .env file or ENV Vars")
 
+PLATFORM=platform
 
 load_dotenv()
 
@@ -134,10 +135,19 @@ def launch_scrcpy_thread(con:Connection,port = 5555,*scrcpy_args):
         print("ended scrcpy")
 
 def scan_android_device_ports_for_adb_tcp(ip:str):
+    if PLATFORM=="darwin":
+        ret=subprocess.run(["nmap",ip,"-p 37000-44000"],capture_output=True)
+        stdout_str=ret.stdout.decode()
+        index=stdout_str.find("/tcp open")
+        port=stdout_str[index-5:index]
+    elif PLATFORM=="win32":
+        ret=subprocess.run(["powershell","-command",F'nmap {ip} -p 37000-44000 | Where-Object{{$_ -match "tcp open"}} | ForEach-Object {{$_.split("/")[0]}}'],capture_output=True)
+        port=ret.stdout.decode().strip()
+    else:
+        proceed=input("LINUX is not tested, enter to skip?")  #TODO test linux ubuntu
+        pass
 
-    ret=subprocess.run(["powershell","-command",F'nmap {ip} -p 37000-44000 | Where-Object{{$_ -match "tcp open"}} | ForEach-Object {{$_.split("/")[0]}}'],capture_output=True)
-    # nmap 192.168.139.83 -p 37000-44000 | awk "/\/tcp/" | cut -d/ -f1 # get port on linux
-    port=ret.stdout.decode().strip()
+    # nmap ip -p 37000-44000 | awk "/\/tcp/" | cut -d/ -f1 # get port on linux
     return port
 
 def connect_wireless_random_port(ip_poss_port:str|None):
