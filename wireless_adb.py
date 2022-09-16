@@ -4,18 +4,26 @@ import subprocess
 from dotenv import load_dotenv
 from multiprocessing import Process, Pipe
 from multiprocessing.connection import Connection
-from sys import platform
+from sys import platform, argv
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger=logging.getLogger("ADBW")
+print(logger)
+
+logger.debug("wireless_adb.py logger is active")
 
 
-def get_env_or_error(env_var_name: str):
-    ret = os.getenv(env_var_name) or EnvNotFoundRaiser(env_var_name)
-    ret = str(ret)
-    return ret
+# def get_env_or_error(env_var_name: str):
+#     ret = os.getenv(env_var_name) or EnvNotFoundRaiser(env_var_name)
+#     ret = str(ret)
+#     return ret
 
 
-class EnvNotFoundRaiser:
-    def __init__(self, env_var_name):
-        raise KeyError(f"{env_var_name} was not found in .env file or ENV Vars")
+# class EnvNotFoundRaiser:
+#     def __init__(self, env_var_name):
+#         raise KeyError(f"{env_var_name} was not found in .env file or ENV Vars")
 
 
 PLATFORM = platform
@@ -189,7 +197,7 @@ def connect_wireless_random_port(ip_poss_port: str | None):
     print("Connected?")
 
 
-def main():
+def main(init_input:str|None=None):
     global port
 
     commands_description = {
@@ -201,10 +209,10 @@ def main():
     try:
         p: Process
         list_devices()
+        inp=init_input
         while True:
-            inp = input(
-                "wifi | usb | status | scrcpy | power | connect(random port) \n>>> ")
-            match inp.split(" "):
+            
+            match inp:
                 # TODO adb pair command
                 case ["wlan"] | ["wifi"]:
                     turn_on_wlan()
@@ -231,18 +239,28 @@ def main():
                         connect_wireless_random_port(None)
                 case ["help"]:
                     print("Commands: ")
-
+                    toprint=commands_description.values()
+                    print(toprint)
                 case [
                     "help",
                     *command,
                 ]:  # case where you want help for a specific command
                     print("TBD")  # TODO implement
+                case None:
+                    pass
+                    # this is init
                 case _:
                     print("could not identify command")
+            inp = input(
+                "wifi | usb | status | scrcpy | power | connect(random port) \n>>> ")  
+            inp=inp.split(" ")      
     except KeyboardInterrupt:
         print("end")
 
 
 if __name__ == "__main__":
+    sysargs_string=argv[1:] # the first argument will be the file path
+    sysargs_passed=sysargs_string if sysargs_string else None  # will be None if the list is empty, else the list
+    logger.info(F"{sysargs_passed=}")
     port = 5555
-    main()
+    main(sysargs_passed)
