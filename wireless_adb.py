@@ -103,7 +103,7 @@ def turn_on_wlan():
     
 
 def list_devices():
-    ret=subprocess.run(["adb", "devices"],capture_output=True)
+    ret=subprocess.run(["adb", "devices", "-l"],capture_output=True) # the -l will show the devices' product name, model name and device name (and transport_id?)
     print(ret.stdout.decode())
 
 def launch_scrcpy(*scrcpy_args) :
@@ -175,14 +175,22 @@ def connect_wireless_random_port(ip_poss_port:str|None):
 
 
 
+
 def main():
     global port
+
+    commands_description={"wifi": '"wifi" or "wlan" will attempt to turn on your wireless debugging daemon on your phone wia usb and then connect to it wirelessly.',
+    "wlan":"alias for wifi",
+    "stop":"will "}
+
+
     try:
         p:Process
         list_devices()
         while True:
-            inp=input("wlan | usb | status | scrcpy | power | connect(random port) \n>>> ")
+            inp=input("wifi | usb | status | scrcpy | power | connect(random port) \n>>> ")
             match inp.split(" "):
+                # TODO adb pair command
                 case ["wlan"] | ["wifi"]:
                     turn_on_wlan()
                 case[ "usb"] | ["stop"]:
@@ -196,14 +204,19 @@ def main():
                     if after_power_args==[] or after_power_args ==["button"]:
                         subprocess.run(["adb","shell","input", "keyevent","26"],check=True)
                         print("power button pressed")
-                case ["connect",*ip_poss_port]:  # to connect to adb wireless if you used the android 11+ quick settings developer tile to enable wireless debug. This trash tile uses an random port, wich serves no reason known to mankind. 
+                case ["connect",*ip_poss_port]:  # to connect to adb wireless if you used the android 11+ quick settings developer tile to enable wireless debuging. This trash tile uses an random port, idk why.
                     if ip_poss_port:
                         connect_wireless_random_port(ip_poss_port[0])
                     else:
                         connect_wireless_random_port(None)
-                
-
+                case ["help"]:
+                    print("Commands: ")
                     
+
+                case ["help", *command ]: # case where you want help for a specific command
+                    print("TBD") # TODO implement
+                case _:
+                    print("could not identify command")
     except KeyboardInterrupt:
         print("end")
 
