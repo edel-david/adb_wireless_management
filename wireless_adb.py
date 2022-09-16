@@ -251,9 +251,8 @@ def main(init_input:str|None=None):
                     print("\n".join(toprint))
                 case [
                     "help",
-                    *command,
-                ]:  # case where you want help for a specific command
-                    print("TBD")  # TODO implement 
+                    *command,]:  # case where you want help for a specific command
+                    print("todo!")  # TODO implement 
                 case ["exit"]:
                     break
                 case None:
