@@ -204,6 +204,13 @@ def main(init_input:str|None=None):
         "wifi": '"wifi" or "wlan" will attempt to turn on your wireless debugging daemon on your phone wia usb and then connect to it wirelessly.',
         "wlan": "alias for wifi",
         "stop": '"usb" or "stop" will stop the wireless debugging daemon on the phone if it was started from usb ("adb tcpip 5555" or "adbw wifi"). Unfortunately it is not easily possible to stop the daemon if started with developer quick tile or in developer options. adb usb will restart wireless debugging with a different port. (Please tell me if thats wrong!',
+        "usb": "alias for stop",
+        "help" : "shows help message. can show only one help by specifying the command: 'help usb'",
+        "devices": "used 'adb devices -l' to show you all known devices",
+        "status": "alias for devices",
+        "power": "simulates a press of the power button",
+        "connect": "to connect to adb wireless if you used the android 11+ quick settings developer tile to enable wireless debuging. This trash tile uses an random port, which is why we scan all possible ports with nmap (must be installed) You can pass an ip:port pair (or soon just the port)" , #TODO pass just port and append to default phone ip
+        "exit": "exits the programm",
     }
 
     try:
@@ -239,23 +246,28 @@ def main(init_input:str|None=None):
                         connect_wireless_random_port(None)
                 case ["help"]:
                     print("Commands: ")
-                    toprint=commands_description.values()
-                    print(toprint)
+                    toprint=commands_description.items()
+                    toprint=[F"{command:10.10}:  {description}" for command, description in toprint]
+                    print("\n".join(toprint))
                 case [
                     "help",
                     *command,
                 ]:  # case where you want help for a specific command
-                    print("TBD")  # TODO implement
+                    print("TBD")  # TODO implement 
+                case ["exit"]:
+                    break
                 case None:
                     pass
                     # this is init
                 case _:
                     print("could not identify command")
             inp = input(
-                "wifi | usb | status | scrcpy | power | connect(random port) \n>>> ")  
-            inp=inp.split(" ")      
+                "wifi | usb | status | scrcpy | power | connect(random port) | exit | help \n>>> ")  
+            inp=inp.split(" ")
     except KeyboardInterrupt:
-        print("end")
+        pass
+    print("end")
+    
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ Dependencies:
     ```.env
     SCRCPY_PATH="C:\\Users\\$User\\Downloads\\scrcpy-win64-v1.21\\scrcpy.exe"
     DEVICE_NAME="4difu45"  (obvously use your device name and path here) 
+    DEFAULT_PHONE_IP=
     ```
     (obvously use your device name and path here):
 
