@@ -72,7 +72,9 @@ def get_adb_android_ip(connection_type_flag: str | None = None):
         ip_args += [connection_type_flag]
     ip_args += ["shell", "ip", "route"]
     ret = subprocess.run(ip_args, capture_output=True)  # only uses usb
-
+    if "device unauthorized" in ret.stderr.decode():
+        print("try pairing the device first")
+        return
     possible_ip = ret.stdout.decode().strip().split(" ")[-1]
     is_ip = check_if_ip(possible_ip)
     if is_ip == True:
@@ -85,7 +87,7 @@ def connect_to_wireless(ip: str, port: str | int = "5555"):
     port = str(port)
     if ip is None:
         return
-    ret = subprocess.run(["adb", "connect", f"{ip}:{port}"], capture_output=True)
+    ret = subprocess.run(["adb", "connect", f"{ip}:{port}"], capture_output=True,)
     print(f"{ret.stdout.decode().strip()} {ret.stderr.decode().strip()}")
 
 
@@ -100,8 +102,12 @@ def stop_tcp_server():
 
 
 def start_debugging_server():
-    ret = subprocess.run("adb -d tcpip 5555".split(" "), capture_output=True)
-    print(f"{ret.stdout.decode().strip()} {ret.stderr.decode().strip()}")
+    try:
+        ret = subprocess.run("adb -d tcpip 5555".split(" "), capture_output=True,)
+    except subprocess.CalledProcessError as e:
+        print("COMMAND FAILED, maybe try pairing?. Error:")
+    finally:    
+        print(f"{ret.stdout.decode().strip()} {ret.stderr.decode().strip()}")
 
 
 def turn_on_wlan():
@@ -166,8 +172,8 @@ def scan_android_device_ports_for_adb_tcp(ip: str):
         )
         port = ret.stdout.decode().strip()
     else:
-        proceed = input("LINUX is not tested, enter to skip?")  # TODO test linux ubuntu
-        pass
+        _ = input("LINUX is not tested, enter to skip?")  # TODO test linux ubuntu
+        return
 
     # nmap ip -p 37000-44000 | awk "/\/tcp/" | cut -d/ -f1 # get port on linux
     return port
@@ -197,7 +203,7 @@ def connect_wireless_random_port(ip_poss_port: str | None):
     print("Connected?")
 
 
-def main(init_input:str|None=None):
+def main(init_input:list[str]|None=None):
     global port
 
     commands_description = {
@@ -244,6 +250,10 @@ def main(init_input:str|None=None):
                         connect_wireless_random_port(ip_poss_port[0])
                     else:
                         connect_wireless_random_port(None)
+                case ["pair"]:
+                    #pair mode
+                    pass
+                    
                 case ["help"]:
                     print("Commands: ")
                     toprint=commands_description.items()
@@ -258,6 +268,7 @@ def main(init_input:str|None=None):
                 case None:
                     pass
                     # this is init
+                
                 case _:
                     print("could not identify command")
             inp = input(
