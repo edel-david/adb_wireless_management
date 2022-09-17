@@ -4,3 +4,5 @@ wireless_adb.spec
 build
 dist
 test
+.DS_Store
+.vscode
