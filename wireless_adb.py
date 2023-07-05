@@ -170,7 +170,7 @@ def scan_android_device_ports_for_adb_tcp(ip: str):
             capture_output=True,
         )
         port = ret.stdout.decode().strip()
-    elif PLATFORM == "LINUX":
+    elif PLATFORM == "LINUX" or PLATFORM == "linux":
         # copied from darwin
         ret = subprocess.run(["nmap", ip, "-p 37000-44000"], capture_output=True)
         stdout_str = ret.stdout.decode()
@@ -178,6 +178,7 @@ def scan_android_device_ports_for_adb_tcp(ip: str):
         port = stdout_str[index - 5 : index]
     else:
         _ = input("unknown Platform, enter to return")  # TODO test linux ubuntu
+        print(PLATFORM)
         return
 
     # nmap ip -p 37000-44000 | awk "/\/tcp/" | cut -d/ -f1 # get port on linux
